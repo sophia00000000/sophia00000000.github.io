@@ -1,0 +1,57 @@
+body {
+    font-family: monospace;
+}
+/* Estilos para la estructura principal de la página */
+#container {
+    display: flex;
+    height: 100vh;
+}
+/* Área donde se visualizará el grafo */
+#mynetwork {
+    flex: 2;
+    border: 1px solid rgb(94, 66, 87);
+    background: #EEEEEE;
+}
+/* Controles del usuario (botones, inputs, etc.) */
+#controls {
+    flex: 1;
+    padding: 10px;
+    border-left: 1px solid rgb(94, 66, 87);
+    background: #F5F5F5;
+    overflow-y: auto;
+}
+input, button {
+    display: block;
+    margin: 5px 0;
+    width: 90%;
+}
+button {
+    padding: 5px;
+    background-color: #c792c3;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #9f50a1;
+}
+hr {
+    margin: 20px 0;
+    color: #300a39;
+}
+#info, #commands-info {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+}
+.shortcut {
+    background-color: #e0e0e0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    margin: 0 2px;
+}
+.command-item {
+    margin-bottom: 8px;
+}

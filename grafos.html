@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafo</title>
+    <!-- Importamos la librería vis-network para manejar la visualización del grafo -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript" src="visnetwork.js"></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <div id="container">
+        <!-- Contenedor donde se dibuja el grafo -->
+        <div id="mynetwork"></div>
+        <!-- Panel lateral con controles -->
+        <div id="controls">
+            <h3>Controles</h3>
+            <!-- Sección de atajos de teclado -->
+            <div id="commands-info">
+                <h4>Atajos de Teclado</h4>
+                <div class="command-item">
+                    <span class="shortcut">Ctrl + Clic</span> en espacio vacío: Añadir nuevo nodo
+                </div>
+                <div class="command-item">
+                    <span class="shortcut">Ctrl + Clic</span> en otro nodo (teniendo uno seleccionado): Crear arista
+                </div>
+                <div class="command-item">
+                    <span class="shortcut">Shift + Clic</span> en nodo: Eliminar nodo y sus conexiones
+                </div>
+                <div class="command-item">
+                    <span class="shortcut">Shift + Clic</span> en arista: Eliminar arista
+                </div>
+            </div>
+            <hr>
+            <!-- Formulario para editar nodos -->
+            <h4>Editar Nodos</h4>
+            <label>ID del nodo:</label>
+            <input type="text" id="nodeId" placeholder="Ej. 1">
+            <label>Nombre:</label>
+            <input type="text" id="nodeLabel" placeholder="Ej. Nodo 1">
+            <input type="hidden" id="nodeCost" value="">
+            <button onclick="updateNode()">Modificar Nodo</button>
+            <hr>
+            <!-- Formulario para conectar nodos -->
+            <h4>Editar Aristas</h4>
+            <label>Introducir nodos (IDs):</label>
+            <input type="text" id="edgeFrom" placeholder="Desde (Ej. 1)">
+            <input type="text" id="edgeTo" placeholder="Hasta (Ej. 2)">
+            <input type="text" id="edgeLabel" placeholder="Valor (Ej. 3)">
+            <button onclick="updateEdge()">Modificar Arista</button>
+            <hr>
+            <div id="info">
+                <h4>Información del Nodo</h4>
+                <div id="nodeInfo">Selecciona un nodo para ver información</div>
+            </div>
+            <hr>
+            <!-- Sección para encontrar rutas -->
+            <h4>Encontrar Rutas</h4>
+            <label>Nodo Inicial:</label>
+            <input type="text" id="startNodeId" placeholder="Ej. 1">
+            <label>Nodo Final:</label>
+            <input type="text" id="endNodeId" placeholder="Ej. 25">
+            <button onclick="findPaths()">Encontrar Rutas</button>
+            
+            <button onclick="resetView()">Resetear Vista</button>
+
+            <div id="pathInfo" style="margin-top: 15px; padding: 10px; background-color: #f1f1f1; border-radius: 5px; display: none;">
+                <h4>Información de Rutas</h4>
+                <div id="shortestPathInfo">
+                    <strong>Ruta más corta:</strong> <span id="shortestPathText"></span>
+                    <div><strong>Distancia:</strong> <span id="shortestPathDistance"></span></div>
+                </div>
+                <div id="longestPathInfo" style="margin-top: 10px;">
+                    <strong>Ruta más larga:</strong> <span id="longestPathText"></span>
+                    <div><strong>Distancia:</strong> <span id="longestPathDistance"></span></div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <span style="background-color: #aaffaa; padding: 2px 8px; border-radius: 3px;">Verde</span>: Ruta más corta
+                    <span style="background-color: #ffaaaa; padding: 2px 8px; border-radius: 3px; margin-left: 10px;">Rojo</span>: Ruta más larga
+                </div>
+            </div>
+            <hr>
+            <div > 
+                <h4>Matrices</h4>
+                <button class="button" onclick="network.mostrarMatriz1()">Matriz Adyacencia</button>
+                <button class="button" onclick="network.mostrarMatriz2()">Matriz Incidencia</button>
+                <table  class="table-container"  id="tabla"> </table> 
+            </div>
+            <hr>
+            <!-- Sección para guardar y cargar grafos -->
+            <h4>Guardar/Cargar Grafo</h4>
+            <button onclick="saveGraph()">Guardar Grafo</button>
+            <input type="file" id="fileInput" accept=".json">
+            <button onclick="loadGraphFromFile()">Cargar desde Archivo</button>
+            <button onclick="loadGraph()">Cargar desde Texto</button>
+            <textarea id="graphJson" placeholder="Aquí se mostrará el JSON del grafo" style="width: 90%; height: 100px; margin-top: 10px;"></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Lista de nodos iniciales vacía
+        let nodes = [];
+
+        // Lista de conexiones vacía
+        let edges = [];
+
+        // Creación del grafo con la clase VisNetwork
+        let container = document.getElementById("mynetwork");
+        let options = {
+            physics: false,
+            nodes: {
+                shape: 'circle',  // Cambiar a círculo
+                size: 30,  // Tamaño adecuado para círculos
+                font: {
+                    size: 16,
+                    face: 'arial'
+                },
+                borderWidth: 2,
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0,0,0,0.2)',
+                    size: 5
+                }
+            },
+            edges: {
+                font: {
+                    size: 14,
+                    align: 'middle'
+                },
+                arrows: {
+                    to: { enabled: true, scaleFactor: 1.2 }
+                },
+                smooth: {
+                    enabled: true,
+                    type: 'curvedCW',
+                    roundness: 0.3
+                },
+                width: 2
+            }
+        };
+        
+        let network = new VisNetwork(container, nodes, edges, options, true);
+        
+        // Funciones para manejar los nodos y aristas mediante el panel de control
+        // Función para actualizar un nodo existente
+        function updateNode() {
+            const id = document.getElementById("nodeId").value;
+            const label = document.getElementById("nodeLabel").value;
+            
+            if (id && label) {
+                if (network.update_node(id, label)) {
+                    alert("Nodo actualizado con éxito!");
+                } else {
+                    alert("Error al actualizar nodo. Verifica que el ID exista.");
+                }
+            } else {
+                alert("Por favor completa todos los campos");
+            }
+        }
+        
+        // Función para actualizar una arista existente
+        function updateEdge() {
+            const from = document.getElementById("edgeFrom").value;
+            const to = document.getElementById("edgeTo").value;
+            const label = document.getElementById("edgeLabel").value;
+            
+            if (from && to && label) {
+                if (network.update_edge(from, to, label)) {
+                    alert("Arista actualizada con éxito!");
+                } else {
+                    alert("Error al actualizar arista. Verifica que la arista exista.");
+                }
+            } else {
+                alert("Por favor completa todos los campos");
+            }
+        }
+    </script>
+
+    <script>
+        // Función para encontrar y mostrar rutas
+        function findPaths() {
+            const startNodeId = document.getElementById("startNodeId").value;
+            const endNodeId = document.getElementById("endNodeId").value;
+            
+            if (startNodeId && endNodeId) {
+                const result = network.highlight_paths(startNodeId, endNodeId);
+                
+                // Mostrar información de la ruta más corta
+                if (result.shortestPath) {
+                    document.getElementById("shortestPathText").textContent = 
+                        result.shortestPath.path.join(" → ");
+                    document.getElementById("shortestPathDistance").textContent = 
+                        result.shortestPath.distance + " créditos";
+                } else {
+                    document.getElementById("shortestPathText").textContent = "No se encontró ruta";
+                    document.getElementById("shortestPathDistance").textContent = "-";
+                }
+                
+                // Mostrar información de la ruta más larga
+                if (result.longestPath && result.longestPath.path) {
+                    document.getElementById("longestPathText").textContent = 
+                        result.longestPath.path.join(" → ");
+                    document.getElementById("longestPathDistance").textContent = 
+                        result.longestPath.distance + " créditos";
+                } else {
+                    document.getElementById("longestPathText").textContent = "No se encontró ruta";
+                    document.getElementById("longestPathDistance").textContent = "-";
+                }
+                
+                // Mostrar el panel de información
+                document.getElementById("pathInfo").style.display = "block";
+            } else {
+                alert("Por favor especifica los nodos de inicio y fin");
+            }
+        }
+        
+        // Función para resetear la vista
+        function resetView() {
+            network.reset_colors();
+            document.getElementById("pathInfo").style.display = "none";
+        }
+        
+        // Agregar función para encontrar automáticamente la ruta más larga del grafo
+        function findLongestPath() {
+            const longestPathInfo = network.find_longest_path();
+            if (longestPathInfo && longestPathInfo.path) {
+                network.reset_colors();
+                network.color_path(longestPathInfo.path, '#aa0000', '#ffaaaa');
+                
+                // Actualizar campos con los nodos de inicio y fin
+                document.getElementById("startNodeId").value = longestPathInfo.start;
+                document.getElementById("endNodeId").value = longestPathInfo.end;
+                
+                // Mostrar información
+                document.getElementById("shortestPathText").textContent = "No calculada";
+                document.getElementById("shortestPathDistance").textContent = "-";
+                document.getElementById("longestPathText").textContent = 
+                    longestPathInfo.path.join(" → ");
+                document.getElementById("longestPathDistance").textContent = 
+                    longestPathInfo.distance + " créditos";
+                
+                // Mostrar el panel de información
+                document.getElementById("pathInfo").style.display = "block";
+            } else {
+                alert("No se pudo encontrar una ruta");
+            }
+        }
+    </script>
+
+    <script>
+        // Función para guardar el grafo actual como JSON
+        function saveGraph() {
+            const graphJson = network.export_graph();
+            document.getElementById("graphJson").value = graphJson;
+            
+            // Opcional: permitir descargar el archivo
+            const blob = new Blob([graphJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'grafo.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // Función para cargar un grafo desde JSON
+        function loadGraph() {
+            const graphJson = document.getElementById("graphJson").value;
+            if (graphJson) {
+                if (network.load_graph(graphJson)) {
+                    alert("Grafo cargado con éxito!");
+                } else {
+                    alert("Error al cargar el grafo.");
+                }
+            } else {
+                alert("Primero debes pegar el JSON del grafo en el área de texto.");
+            }
+        }
+    </script>
+
+    <script>
+        // Agregar esta nueva función para cargar desde archivo
+        function loadGraphFromFile() {
+            const fileInput = document.getElementById("fileInput");
+            
+            if (fileInput.files.length === 0) {
+                alert("Por favor, selecciona un archivo primero.");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById("graphJson").value = content;
+                if (network.load_graph(content)) {
+                    alert("Grafo cargado con éxito desde archivo!");
+                } else {
+                    alert("Error al cargar el grafo desde archivo.");
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+
+    </script>
+
+</body>
+
+</html>
