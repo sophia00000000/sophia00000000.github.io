@@ -193,7 +193,7 @@
                     document.getElementById("shortestPathText").textContent = 
                         result.shortestPath.path.join(" → ");
                     document.getElementById("shortestPathDistance").textContent = 
-                        result.shortestPath.distance + " créditos";
+                        result.shortestPath.distance;
                 } else {
                     document.getElementById("shortestPathText").textContent = "No se encontró ruta";
                     document.getElementById("shortestPathDistance").textContent = "-";
@@ -204,7 +204,7 @@
                     document.getElementById("longestPathText").textContent = 
                         result.longestPath.path.join(" → ");
                     document.getElementById("longestPathDistance").textContent = 
-                        result.longestPath.distance + " créditos";
+                        result.longestPath.distance;
                 } else {
                     document.getElementById("longestPathText").textContent = "No se encontró ruta";
                     document.getElementById("longestPathDistance").textContent = "-";
