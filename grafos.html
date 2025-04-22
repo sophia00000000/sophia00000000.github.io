@@ -63,10 +63,10 @@
             <input type="text" id="startNodeId" placeholder="Ej. 1">
             <label>Nodo Final:</label>
             <input type="text" id="endNodeId" placeholder="Ej. 25">
-            <button onclick="findPaths()">Encontrar Rutas</button>
-            
+            <button onclick="findShortestPath()">Ruta Óptima</button>
+            <button onclick="findLongestPath()">Ruta Crítica</button>
             <button onclick="resetView()">Resetear Vista</button>
-
+            
             <div id="pathInfo" style="margin-top: 15px; padding: 10px; background-color: #f1f1f1; border-radius: 5px; display: none;">
                 <h4>Información de Rutas</h4>
                 <div id="shortestPathInfo">
