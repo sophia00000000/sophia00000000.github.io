@@ -57,28 +57,31 @@
                 <div id="nodeInfo">Selecciona un nodo para ver información</div>
             </div>
             <hr>
-            <!-- Sección para encontrar rutas -->
+            <!-- Sección para encontrar rutas - MODIFICADA -->
             <h4>Encontrar Rutas</h4>
             <label>Nodo Inicial:</label>
             <input type="text" id="startNodeId" placeholder="Ej. 1">
             <label>Nodo Final:</label>
             <input type="text" id="endNodeId" placeholder="Ej. 25">
-            <button onclick="find_shortest_path()">Ruta Óptima</button>
-            <button onclick="find_longtest_path()">Ruta Crítica</button>
+            <!-- Botones separados para ruta óptima y crítica -->
+            <button onclick="findShortestPath()">Encontrar Ruta Óptima</button>
+            <button onclick="findLongestPath()">Encontrar Ruta Crítica</button>
             
+            <button onclick="resetView()">Resetear Vista</button>
+
             <div id="pathInfo" style="margin-top: 15px; padding: 10px; background-color: #f1f1f1; border-radius: 5px; display: none;">
                 <h4>Información de Rutas</h4>
                 <div id="shortestPathInfo">
-                    <strong>Ruta más corta:</strong> <span id="shortestPathText"></span>
+                    <strong>Ruta óptima:</strong> <span id="shortestPathText"></span>
                     <div><strong>Distancia:</strong> <span id="shortestPathDistance"></span></div>
                 </div>
                 <div id="longestPathInfo" style="margin-top: 10px;">
-                    <strong>Ruta más larga:</strong> <span id="longestPathText"></span>
+                    <strong>Ruta crítica:</strong> <span id="longestPathText"></span>
                     <div><strong>Distancia:</strong> <span id="longestPathDistance"></span></div>
                 </div>
                 <div style="margin-top: 10px;">
-                    <span style="background-color: #aaffaa; padding: 2px 8px; border-radius: 3px;">Verde</span>: Ruta más corta
-                    <span style="background-color: #ffaaaa; padding: 2px 8px; border-radius: 3px; margin-left: 10px;">Rojo</span>: Ruta más larga
+                    <span style="background-color: #aaffaa; padding: 2px 8px; border-radius: 3px;">Verde</span>: Ruta óptima
+                    <span style="background-color: #ffaaaa; padding: 2px 8px; border-radius: 3px; margin-left: 10px;">Rojo</span>: Ruta crítica
                 </div>
             </div>
             <hr>
@@ -179,31 +182,80 @@
     </script>
 
     <script>
-        // Función para encontrar y mostrar rutas
-        function findPaths() {
+        
+        // Función para encontrar y mostrar la ruta más corta (óptima)
+        function findShortestPath() {
             const startNodeId = document.getElementById("startNodeId").value;
             const endNodeId = document.getElementById("endNodeId").value;
             
             if (startNodeId && endNodeId) {
-                const result = network.highlight_paths(startNodeId, endNodeId);
+                // Primero resetear los colores
+                network.reset_colors();
                 
-                // Mostrar información de la ruta más corta
-                if (result.shortestPath) {
+                // Encontrar la ruta más corta
+                const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
+                
+                // Colorear solo la ruta más corta
+                if (shortestPath) {
+                    network.color_path(shortestPath.path, '#00aa00', '#aaffaa'); // Verde
+                    
+                    // Actualizar información de la ruta en el panel
                     document.getElementById("shortestPathText").textContent = 
-                        result.shortestPath.path.join(" → ");
+                        shortestPath.path.join(" → ");
                     document.getElementById("shortestPathDistance").textContent = 
-                        result.shortestPath.distance;
+                        shortestPath.distance;
+                    
+                    // Limpiar la información de la ruta crítica
+                    document.getElementById("longestPathText").textContent = "No calculada";
+                    document.getElementById("longestPathDistance").textContent = "-";
                 } else {
                     document.getElementById("shortestPathText").textContent = "No se encontró ruta";
                     document.getElementById("shortestPathDistance").textContent = "-";
                 }
                 
-                // Mostrar información de la ruta más larga
-                if (result.longestPath && result.longestPath.path) {
+                // Mostrar el panel de información
+                document.getElementById("pathInfo").style.display = "block";
+            } else {
+                alert("Por favor especifica los nodos de inicio y fin");
+            }
+        }
+        
+        // Función para encontrar y mostrar la ruta más larga (crítica)
+        function findLongestPath() {
+            const startNodeId = document.getElementById("startNodeId").value;
+            const endNodeId = document.getElementById("endNodeId").value;
+            
+            if (startNodeId && endNodeId) {
+                // Primero resetear los colores
+                network.reset_colors();
+                
+                // Encontrar todos los posibles caminos entre inicio y fin
+                const allPaths = network.find_all_paths(startNodeId, endNodeId);
+                let maxDistance = -1;
+                let longestPath = null;
+                
+                if (allPaths && allPaths.length > 0) {
+                    // Encontrar el camino más largo
+                    allPaths.forEach(path => {
+                        const distance = network.calculate_path_distance(path);
+                        if (distance > maxDistance) {
+                            maxDistance = distance;
+                            longestPath = path;
+                        }
+                    });
+                    
+                    // Colorear la ruta más larga
+                    network.color_path(longestPath, '#aa0000', '#ffaaaa'); // Rojo
+                    
+                    // Actualizar información de la ruta en el panel
                     document.getElementById("longestPathText").textContent = 
-                        result.longestPath.path.join(" → ");
+                        longestPath.join(" → ");
                     document.getElementById("longestPathDistance").textContent = 
-                        result.longestPath.distance;
+                        maxDistance;
+                    
+                    // Limpiar la información de la ruta óptima
+                    document.getElementById("shortestPathText").textContent = "No calculada";
+                    document.getElementById("shortestPathDistance").textContent = "-";
                 } else {
                     document.getElementById("longestPathText").textContent = "No se encontró ruta";
                     document.getElementById("longestPathDistance").textContent = "-";
@@ -220,32 +272,6 @@
         function resetView() {
             network.reset_colors();
             document.getElementById("pathInfo").style.display = "none";
-        }
-        
-        // Agregar función para encontrar automáticamente la ruta más larga del grafo
-        function findLongestPath() {
-            const longestPathInfo = network.find_longest_path();
-            if (longestPathInfo && longestPathInfo.path) {
-                network.reset_colors();
-                network.color_path(longestPathInfo.path, '#aa0000', '#ffaaaa');
-                
-                // Actualizar campos con los nodos de inicio y fin
-                document.getElementById("startNodeId").value = longestPathInfo.start;
-                document.getElementById("endNodeId").value = longestPathInfo.end;
-                
-                // Mostrar información
-                document.getElementById("shortestPathText").textContent = "No calculada";
-                document.getElementById("shortestPathDistance").textContent = "-";
-                document.getElementById("longestPathText").textContent = 
-                    longestPathInfo.path.join(" → ");
-                document.getElementById("longestPathDistance").textContent = 
-                    longestPathInfo.distance + " créditos";
-                
-                // Mostrar el panel de información
-                document.getElementById("pathInfo").style.display = "block";
-            } else {
-                alert("No se pudo encontrar una ruta");
-            }
         }
     </script>
 
@@ -305,8 +331,6 @@
             
             reader.readAsText(file);
         }
-
-
     </script>
 
 </body>
