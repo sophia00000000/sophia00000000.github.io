@@ -838,9 +838,9 @@ mostrarMatriz2() {
         for (let edge of edgesList) {
             const cell = row.insertCell(-1);
             if (edge.from === node.id) {
-                cell.innerHTML = "1"; // Nodo es origen de la arista
+                cell.innerHTML = `1, ${edge.label}`; // Nodo es origen de la arista
             } else if (edge.to === node.id) {
-                cell.innerHTML = "-1"; // Nodo es destino de la arista
+                cell.innerHTML = `-1, ${edge.label}`; // Nodo es destino de la arista
             } else {
                 cell.innerHTML = "0"; // Nodo no está relacionado con la arista
             }
