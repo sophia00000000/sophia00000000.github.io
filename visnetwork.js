@@ -615,30 +615,34 @@ class VisNetwork {
 
     // Método para restablecer los colores originales del grafo
     reset_colors() {
-        // Obtenemos todos los nodos y aristas actuales
-        const allNodes = this.nodes.get();
-        const allEdges = this.edges.get();
-        
-        // Creamos copias sin las propiedades de color
-        const newNodes = allNodes.map(node => {
-            // Crear un nuevo objeto sin las propiedades de color
-            const { color, ...nodeWithoutColor } = node;
-            return nodeWithoutColor;
+        // Resetear colores de nodos al color por defecto
+        this.nodes.getIds().forEach(nodeId => {
+            this.nodes.update({
+                id: nodeId,
+                color: {
+                    background: '#97C2FC', // color por defecto de vis.js
+                    border: '#2B7CE9',
+                    highlight: {
+                        background: '#D2E5FF',
+                        border: '#2B7CE9'
+                    }
+                },
+                borderWidth: 2
+            });
         });
-        
-        const newEdges = allEdges.map(edge => {
-            // Crear un nuevo objeto sin las propiedades de color
-            const { color, width, ...edgeWithoutColor } = edge;
-            return { ...edgeWithoutColor, width: 2 };
+    
+        // Resetear colores de aristas al color por defecto
+        this.edges.getIds().forEach(edgeId => {
+            this.edges.update({
+                id: edgeId,
+                color: {
+                    color: '#848484', // color por defecto de vis.js
+                    highlight: '#848484',
+                    inherit: true
+                },
+                width: 2
+            });
         });
-        
-        // Primero eliminamos todos los nodos y aristas
-        this.nodes.clear();
-        this.edges.clear();
-        
-        // Luego añadimos las copias sin color
-        this.nodes.add(newNodes);
-        this.edges.add(newEdges);
     }
     
     // Método para destacar la ruta más corta y la ruta más larga
