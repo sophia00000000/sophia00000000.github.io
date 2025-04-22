@@ -272,6 +272,12 @@
         function resetView() {
             network.reset_colors();
             document.getElementById("pathInfo").style.display = "none";
+            
+            // Limpiar la información de las rutas
+            document.getElementById("shortestPathText").textContent = "";
+            document.getElementById("shortestPathDistance").textContent = "";
+            document.getElementById("longestPathText").textContent = "";
+            document.getElementById("longestPathDistance").textContent = "";
         }
     </script>
 
