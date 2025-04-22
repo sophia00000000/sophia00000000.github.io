@@ -615,15 +615,12 @@ class VisNetwork {
 
     // Método para restablecer los colores originales del grafo
     reset_colors() {
-        // Resetear colores de nodos
+        // Resetear colores de nodos con valores explícitos
         this.nodes.getIds().forEach(nodeId => {
             this.nodes.update({
                 id: nodeId,
-                color: {
-                    background: undefined,
-                    border: undefined,
-                    highlight: undefined
-                }
+                color: null,  // Esto fuerza a eliminar completamente la propiedad color
+                borderWidth: 2  // Restaurar grosor del borde
             });
         });
         
@@ -631,15 +628,12 @@ class VisNetwork {
         this.edges.getIds().forEach(edgeId => {
             this.edges.update({
                 id: edgeId,
-                color: {
-                    color: undefined,
-                    highlight: undefined
-                },
-                width: 2
+                color: null,  // Eliminar completamente la propiedad color
+                width: 2  // Restaurar grosor de la línea
             });
         });
     }
-
+    
     // Método para destacar la ruta más corta y la ruta más larga
     highlight_paths(startNodeId, endNodeId) {
         // Primero, restablecer todos los colores
