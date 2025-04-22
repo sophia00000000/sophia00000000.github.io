@@ -619,7 +619,11 @@ class VisNetwork {
         this.nodes.getIds().forEach(nodeId => {
             this.nodes.update({
                 id: nodeId,
-                color: undefined
+                color: {
+                    background: undefined,
+                    border: undefined,
+                    highlight: undefined
+                }
             });
         });
         
@@ -627,7 +631,10 @@ class VisNetwork {
         this.edges.getIds().forEach(edgeId => {
             this.edges.update({
                 id: edgeId,
-                color: undefined,
+                color: {
+                    color: undefined,
+                    highlight: undefined
+                },
                 width: 2
             });
         });
