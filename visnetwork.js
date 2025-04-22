@@ -386,57 +386,51 @@ class VisNetwork {
 
     // Implementación del algoritmo de Dijkstra para encontrar la ruta más corta
     // Función para encontrar y mostrar la ruta más corta
-    // Modificar la función resetView por resetColors
-function resetColors() {
-    network.reset_colors();
-    document.getElementById("pathInfo").style.display = "none";
-}
 
-// Añadir función para encontrar solo la ruta más corta
-function findShortestPath() {
-    const startNodeId = document.getElementById("startNodeId").value;
-    const endNodeId = document.getElementById("endNodeId").value;
-    
-    if (startNodeId && endNodeId) {
-        // Primero, resetear colores
-        network.reset_colors();
-        
-        // Buscar la ruta más corta
-        const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
-        if (shortestPath) {
-            network.color_path(shortestPath.path, '#00aa00', '#aaffaa'); // Verde
-            
-            // Actualizar la información
-            document.getElementById("shortestPathText").textContent = 
-                shortestPath.path.join(" → ");
-            document.getElementById("shortestPathDistance").textContent = 
-                shortestPath.distance;
-            document.getElementById("longestPathText").textContent = "No calculada";
-            document.getElementById("longestPathDistance").textContent = "-";
-            
-            // Mostrar el panel de información
-            document.getElementById("pathInfo").style.display = "block";
-        } else {
-            alert("No se encontró ruta entre los nodos seleccionados");
-        }
-    } else {
-        alert("Por favor especifica los nodos de inicio y fin");
-    }
-}
-
-// Función para encontrar la ruta más larga entre nodos específicos
-    function findLongestPath() {
+    function findShortestPath() {
         const startNodeId = document.getElementById("startNodeId").value;
         const endNodeId = document.getElementById("endNodeId").value;
         
         if (startNodeId && endNodeId) {
-            // Primero, resetear colores
+            // Resetear colores antes de mostrar una nueva ruta
             network.reset_colors();
             
-            // Encontrar todos los caminos posibles entre estos nodos
+            // Buscar la ruta más corta
+            const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
+            if (shortestPath) {
+                network.color_path(shortestPath.path, '#00aa00', '#aaffaa'); // Verde
+                
+                // Actualizar información
+                document.getElementById("shortestPathText").textContent = 
+                    shortestPath.path.join(" → ");
+                document.getElementById("shortestPathDistance").textContent = 
+                    shortestPath.distance;
+                document.getElementById("longestPathText").textContent = "No calculada";
+                document.getElementById("longestPathDistance").textContent = "-";
+                
+                // Mostrar el panel de información
+                document.getElementById("pathInfo").style.display = "block";
+            } else {
+                alert("No se encontró ruta entre los nodos seleccionados");
+            }
+        } else {
+            alert("Por favor especifica los nodos de inicio y fin");
+        }
+    }
+    
+    // Función para encontrar la ruta crítica (más larga)
+    function findCriticalPath() {
+        const startNodeId = document.getElementById("startNodeId").value;
+        const endNodeId = document.getElementById("endNodeId").value;
+        
+        if (startNodeId && endNodeId) {
+            // Resetear colores antes de mostrar una nueva ruta
+            network.reset_colors();
+            
+            // Encontrar todos los caminos posibles
             const paths = network.find_all_paths(startNodeId, endNodeId);
             if (paths && paths.length > 0) {
-                // Encontrar el camino más largo de todos los encontrados
+                // Encontrar el camino más largo
                 let maxDistance = -1;
                 let longestPath = null;
                 
@@ -448,11 +442,10 @@ function findShortestPath() {
                     }
                 });
                 
-                // Colorear el camino más largo
                 if (longestPath) {
                     network.color_path(longestPath, '#aa0000', '#ffaaaa'); // Rojo
                     
-                    // Actualizar la información
+                    // Actualizar información
                     document.getElementById("shortestPathText").textContent = "No calculada";
                     document.getElementById("shortestPathDistance").textContent = "-";
                     document.getElementById("longestPathText").textContent = 
