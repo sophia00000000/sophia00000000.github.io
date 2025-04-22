@@ -385,82 +385,134 @@ class VisNetwork {
     }
 
     // Implementación del algoritmo de Dijkstra para encontrar la ruta más corta
-    // Función para encontrar y mostrar la ruta más corta
-
-    function findShortestPath() {
-        const startNodeId = document.getElementById("startNodeId").value;
-        const endNodeId = document.getElementById("endNodeId").value;
+    find_shortest_path(startNodeId, endNodeId) {
+        startNodeId = parseInt(startNodeId);
+        endNodeId = parseInt(endNodeId);
         
-        if (startNodeId && endNodeId) {
-            // Resetear colores antes de mostrar una nueva ruta
-            network.reset_colors();
-            
-            // Buscar la ruta más corta
-            const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
-            if (shortestPath) {
-                network.color_path(shortestPath.path, '#00aa00', '#aaffaa'); // Verde
-                
-                // Actualizar información
-                document.getElementById("shortestPathText").textContent = 
-                    shortestPath.path.join(" → ");
-                document.getElementById("shortestPathDistance").textContent = 
-                    shortestPath.distance;
-                document.getElementById("longestPathText").textContent = "No calculada";
-                document.getElementById("longestPathDistance").textContent = "-";
-                
-                // Mostrar el panel de información
-                document.getElementById("pathInfo").style.display = "block";
-            } else {
-                alert("No se encontró ruta entre los nodos seleccionados");
-            }
-        } else {
-            alert("Por favor especifica los nodos de inicio y fin");
+        // Verificar que los nodos existen
+        if (!this.nodes.get(startNodeId) || !this.nodes.get(endNodeId)) {
+            console.error("Nodo de inicio o fin no existe");
+            return null;
         }
-    }
-    
-    // Función para encontrar la ruta crítica (más larga)
-    function findCriticalPath() {
-        const startNodeId = document.getElementById("startNodeId").value;
-        const endNodeId = document.getElementById("endNodeId").value;
         
-        if (startNodeId && endNodeId) {
-            // Resetear colores antes de mostrar una nueva ruta
-            network.reset_colors();
+        // Inicializar distancias y nodos visitados
+        const distances = {};
+        const previous = {};
+        const unvisited = new Set();
+        
+        // Inicializar todas las distancias como infinito
+        this.nodes.getIds().forEach(nodeId => {
+            distances[nodeId] = Infinity;
+            previous[nodeId] = null;
+            unvisited.add(nodeId);
+        });
+        
+        // La distancia desde el nodo inicial a sí mismo es 0
+        distances[startNodeId] = 0;
+        
+        // Mientras haya nodos sin visitar
+        while (unvisited.size > 0) {
+            // Encontrar el nodo no visitado con la menor distancia
+            let currentNodeId = null;
+            let minDistance = Infinity;
             
-            // Encontrar todos los caminos posibles
-            const paths = network.find_all_paths(startNodeId, endNodeId);
-            if (paths && paths.length > 0) {
-                // Encontrar el camino más largo
-                let maxDistance = -1;
-                let longestPath = null;
-                
-                paths.forEach(path => {
-                    const distance = network.calculate_path_distance(path);
-                    if (distance > maxDistance) {
-                        maxDistance = distance;
-                        longestPath = path;
-                    }
-                });
-                
-                if (longestPath) {
-                    network.color_path(longestPath, '#aa0000', '#ffaaaa'); // Rojo
-                    
-                    // Actualizar información
-                    document.getElementById("shortestPathText").textContent = "No calculada";
-                    document.getElementById("shortestPathDistance").textContent = "-";
-                    document.getElementById("longestPathText").textContent = 
-                        longestPath.join(" → ");
-                    document.getElementById("longestPathDistance").textContent = maxDistance;
-                    
-                    // Mostrar el panel de información
-                    document.getElementById("pathInfo").style.display = "block";
+            unvisited.forEach(nodeId => {
+                if (distances[nodeId] < minDistance) {
+                    minDistance = distances[nodeId];
+                    currentNodeId = nodeId;
                 }
-            } else {
-                alert("No se encontró ninguna ruta entre los nodos seleccionados");
+            });
+            
+            // Si no hay más caminos o llegamos al destino, terminamos
+            if (currentNodeId === null || currentNodeId === endNodeId) {
+                break;
             }
-        } else {
-            alert("Por favor especifica los nodos de inicio y fin");
+            
+            // Quitar el nodo actual de los no visitados
+            unvisited.delete(currentNodeId);
+            
+            // Obtener todas las aristas desde el nodo actual
+            const edges = this.edges.get({
+                filter: function(edge) {
+                    return edge.from === currentNodeId;
+                }
+            });
+            
+            // Para cada vecino, calcular la distancia desde el nodo actual
+            edges.forEach(edge => {
+                const neighborId = edge.to;
+                
+                // Obtener el peso/costo de la arista
+                const weight = parseInt(edge.label.replace('C', '')) || 1;
+                
+                // Calcular nueva distancia potencial
+                const distanceToNeighbor = distances[currentNodeId] + weight;
+                
+                // Si encontramos una ruta más corta al vecino, actualizar
+                if (distanceToNeighbor < distances[neighborId]) {
+                    distances[neighborId] = distanceToNeighbor;
+                    previous[neighborId] = currentNodeId;
+                }
+            });
         }
+        
+        // Construir la ruta desde el final hacia el principio
+        const path = [];
+        let current = endNodeId;
+        
+        // Si no hay camino, retornar null
+        if (previous[endNodeId] === null && endNodeId !== startNodeId) {
+            return null;
+        }
+        
+        // Reconstruir el camino
+        while (current !== null) {
+            path.unshift(current);
+            current = previous[current];
+        }
+        
+        return {
+            path: path,
+            distance: distances[endNodeId]
+        };
+    }
+
+    // Método para encontrar la ruta más larga (usando el algoritmo de Dijkstra modificado)
+    find_longest_path() {
+        let maxDistance = -1;
+        let longestPath = null;
+        let startNode = null;
+        let endNode = null;
+        
+        // Probar todas las combinaciones posibles de nodos
+        const nodeIds = this.nodes.getIds();
+        
+        for (let i = 0; i < nodeIds.length; i++) {
+            for (let j = 0; j < nodeIds.length; j++) {
+                if (i !== j) {
+                    const result = this.find_all_paths(nodeIds[i], nodeIds[j]);
+                    if (result && result.length > 0) {
+                        // Encontrar el camino más largo de todos los posibles
+                        result.forEach(path => {
+                            const distance = this.calculate_path_distance(path);
+                            if (distance > maxDistance) {
+                                maxDistance = distance;
+                                longestPath = path;
+                                startNode = nodeIds[i];
+                                endNode = nodeIds[j];
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        
+        return {
+            path: longestPath,
+            distance: maxDistance,
+            start: startNode,
+            end: endNode
+        };
     }
     
     // Método auxiliar para encontrar todos los caminos posibles entre dos nodos (DFS)
