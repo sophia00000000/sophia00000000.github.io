@@ -386,59 +386,61 @@ class VisNetwork {
 
     // Implementación del algoritmo de Dijkstra para encontrar la ruta más corta
     // Función para encontrar y mostrar la ruta más corta
-    function findShortestPath() {
-        const startNodeId = document.getElementById("startNodeId").value;
-        const endNodeId = document.getElementById("endNodeId").value;
-        
-        if (startNodeId && endNodeId) {
-            // Primero restablecer colores
-            network.reset_colors();
-            
-            // Buscar la ruta más corta
-            const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
-            
-            if (shortestPath) {
-                // Colorear la ruta
-                network.color_path(shortestPath.path, '#00aa00', '#aaffaa');
-                
-                // Mostrar información de la ruta
-                document.getElementById("shortestPathText").textContent = 
-                    shortestPath.path.join(" → ");
-                document.getElementById("shortestPathDistance").textContent = 
-                    shortestPath.distance;
-                    
-                // Ocultar información de ruta larga
-                document.getElementById("longestPathInfo").style.display = "none";
-                document.getElementById("shortestPathInfo").style.display = "block";
-                
-                // Mostrar el panel de información
-                document.getElementById("pathInfo").style.display = "block";
-            } else {
-                alert("No se encontró ruta entre los nodos especificados");
-            }
-        } else {
-            alert("Por favor especifica los nodos de inicio y fin");
-        }
-    }
+    // Modificar la función resetView por resetColors
+function resetColors() {
+    network.reset_colors();
+    document.getElementById("pathInfo").style.display = "none";
+}
+
+// Añadir función para encontrar solo la ruta más corta
+function findShortestPath() {
+    const startNodeId = document.getElementById("startNodeId").value;
+    const endNodeId = document.getElementById("endNodeId").value;
     
-    // Función para encontrar y mostrar la ruta más larga
+    if (startNodeId && endNodeId) {
+        // Primero, resetear colores
+        network.reset_colors();
+        
+        // Buscar la ruta más corta
+        const shortestPath = network.find_shortest_path(startNodeId, endNodeId);
+        if (shortestPath) {
+            network.color_path(shortestPath.path, '#00aa00', '#aaffaa'); // Verde
+            
+            // Actualizar la información
+            document.getElementById("shortestPathText").textContent = 
+                shortestPath.path.join(" → ");
+            document.getElementById("shortestPathDistance").textContent = 
+                shortestPath.distance;
+            document.getElementById("longestPathText").textContent = "No calculada";
+            document.getElementById("longestPathDistance").textContent = "-";
+            
+            // Mostrar el panel de información
+            document.getElementById("pathInfo").style.display = "block";
+        } else {
+            alert("No se encontró ruta entre los nodos seleccionados");
+        }
+    } else {
+        alert("Por favor especifica los nodos de inicio y fin");
+    }
+}
+
+// Función para encontrar la ruta más larga entre nodos específicos
     function findLongestPath() {
         const startNodeId = document.getElementById("startNodeId").value;
         const endNodeId = document.getElementById("endNodeId").value;
         
         if (startNodeId && endNodeId) {
-            // Primero restablecer colores
+            // Primero, resetear colores
             network.reset_colors();
             
-            // Buscar todas las rutas y encontrar la más larga
-            const allPaths = network.find_all_paths(startNodeId, endNodeId);
-            
-            if (allPaths && allPaths.length > 0) {
-                // Encontrar la ruta con la distancia más larga
+            // Encontrar todos los caminos posibles entre estos nodos
+            const paths = network.find_all_paths(startNodeId, endNodeId);
+            if (paths && paths.length > 0) {
+                // Encontrar el camino más largo de todos los encontrados
                 let maxDistance = -1;
                 let longestPath = null;
                 
-                allPaths.forEach(path => {
+                paths.forEach(path => {
                     const distance = network.calculate_path_distance(path);
                     if (distance > maxDistance) {
                         maxDistance = distance;
@@ -446,67 +448,26 @@ class VisNetwork {
                     }
                 });
                 
-                // Colorear la ruta
-                network.color_path(longestPath, '#aa0000', '#ffaaaa');
-                
-                // Mostrar información de la ruta
-                document.getElementById("longestPathText").textContent = 
-                    longestPath.join(" → ");
-                document.getElementById("longestPathDistance").textContent = 
-                    maxDistance;
+                // Colorear el camino más largo
+                if (longestPath) {
+                    network.color_path(longestPath, '#aa0000', '#ffaaaa'); // Rojo
                     
-                // Ocultar información de ruta corta
-                document.getElementById("shortestPathInfo").style.display = "none";
-                document.getElementById("longestPathInfo").style.display = "block";
-                
-                // Mostrar el panel de información
-                document.getElementById("pathInfo").style.display = "block";
+                    // Actualizar la información
+                    document.getElementById("shortestPathText").textContent = "No calculada";
+                    document.getElementById("shortestPathDistance").textContent = "-";
+                    document.getElementById("longestPathText").textContent = 
+                        longestPath.join(" → ");
+                    document.getElementById("longestPathDistance").textContent = maxDistance;
+                    
+                    // Mostrar el panel de información
+                    document.getElementById("pathInfo").style.display = "block";
+                }
             } else {
-                alert("No se encontró ruta entre los nodos especificados");
+                alert("No se encontró ninguna ruta entre los nodos seleccionados");
             }
         } else {
-            // Si no se especifican nodos, buscar la ruta más larga en todo el grafo
-            const longestPathInfo = network.find_longest_path();
-            
-            if (longestPathInfo && longestPathInfo.path) {
-                network.reset_colors();
-                network.color_path(longestPathInfo.path, '#aa0000', '#ffaaaa');
-                
-                // Actualizar campos con los nodos de inicio y fin
-                document.getElementById("startNodeId").value = longestPathInfo.start;
-                document.getElementById("endNodeId").value = longestPathInfo.end;
-                
-                // Mostrar información
-                document.getElementById("longestPathText").textContent = 
-                    longestPathInfo.path.join(" → ");
-                document.getElementById("longestPathDistance").textContent = 
-                    longestPathInfo.distance;
-                
-                // Ocultar información de ruta corta
-                document.getElementById("shortestPathInfo").style.display = "none";
-                document.getElementById("longestPathInfo").style.display = "block";
-                
-                // Mostrar el panel de información
-                document.getElementById("pathInfo").style.display = "block";
-            } else {
-                alert("No se pudo encontrar una ruta");
-            }
+            alert("Por favor especifica los nodos de inicio y fin");
         }
-    }
-    
-    // Función para resetear la vista
-    function resetView() {
-        // Restablecer colores en el grafo
-        network.reset_colors();
-        
-        // Ocultar panel de información
-        document.getElementById("pathInfo").style.display = "none";
-        
-        // Limpiar campos de nodos
-        document.getElementById("startNodeId").value = "";
-        document.getElementById("endNodeId").value = "";
-        
-        console.log("Vista reseteada");
     }
     
     // Método auxiliar para encontrar todos los caminos posibles entre dos nodos (DFS)
@@ -608,23 +569,9 @@ class VisNetwork {
     }
 
     // Método para restablecer los colores originales del grafo
-    reset_colors() {
-        // Resetear colores de nodos
-        this.nodes.getIds().forEach(nodeId => {
-            this.nodes.update({
-                id: nodeId,
-                color: undefined
-            });
-        });
-        
-        // Resetear colores de aristas
-        this.edges.getIds().forEach(edgeId => {
-            this.edges.update({
-                id: edgeId,
-                color: undefined,
-                width: 2
-            });
-        });
+    function resetColors() {
+        network.reset_colors();
+        document.getElementById("pathInfo").style.display = "none";
     }
 
     // Método para destacar la ruta más corta y la ruta más larga
