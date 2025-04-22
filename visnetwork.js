@@ -514,7 +514,7 @@ class VisNetwork {
             end: endNode
         };
     }
-    
+
     // Método auxiliar para encontrar todos los caminos posibles entre dos nodos (DFS)
     find_all_paths(startNodeId, endNodeId, path = [], visited = {}) {
         startNodeId = parseInt(startNodeId);
@@ -614,9 +614,23 @@ class VisNetwork {
     }
 
     // Método para restablecer los colores originales del grafo
-    function resetColors() {
-        network.reset_colors();
-        document.getElementById("pathInfo").style.display = "none";
+    reset_colors() {
+        // Resetear colores de nodos
+        this.nodes.getIds().forEach(nodeId => {
+            this.nodes.update({
+                id: nodeId,
+                color: undefined
+            });
+        });
+        
+        // Resetear colores de aristas
+        this.edges.getIds().forEach(edgeId => {
+            this.edges.update({
+                id: edgeId,
+                color: undefined,
+                width: 2
+            });
+        });
     }
 
     // Método para destacar la ruta más corta y la ruta más larga
